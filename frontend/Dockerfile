@@ -48,8 +48,8 @@ RUN python -m pip install /tmp/aqua-jupyter-proxy/ && \
     fix-permissions "/home/${NB_USER}"
 
 
-ENV SERVER_IP="169.235.21.21"
-ENV SERVER_PORT="8000"
+# ENV SERVER_IP=
+# ENV SERVER_PORT=
 
 WORKDIR /
 RUN    ln -fs /home /datahub && \
