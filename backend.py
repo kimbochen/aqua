@@ -17,17 +17,18 @@ logging.info('Fast API app loaded.')
 DEBUG = False
 if not DEBUG:
     query_fn = aqua.StableLM3BQueryEngine('data/').query
+    DB_PATH = 'user_logs.db'
 else:
     query_fn = lambda query: ''.join(random.choice([str.upper, str.lower])(c) for c in query)
+    DB_PATH = 'debug_user_logs.db'
 logging.info('Query engine loaded.')
 
 
-DB_PATH = 'user_logs.db'
 if not Path(DB_PATH).exists():
     with (conn := sqlite3.connect(DB_PATH)):
         conn.cursor().execute('CREATE TABLE user_logs(id, user_id, query, response, quality)')
     conn.close()
-    logging.info('Database created.')
+    logging.info(f'Database {DB_PATH} created.')
 
 
 @app.get('/')
