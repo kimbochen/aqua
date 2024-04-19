@@ -18,7 +18,7 @@ def query_aqua(qtype_val, query, asmt_id, q_id):
         query_params = {'query': query, 'user_id': USER_ID, 'asmt_id': asmt_id, 'q_id': q_id}
         response = requests.get(f'{API_ENDPOINT}/asmtq', params=query_params).json()
     else:
-        raise ValueError(f'Invalid question type {qtype_val}')
+        response = {'answer': f'Please select a question type.', 'qa_id': None}
 
     QA_ID = response['qa_id']
 
@@ -48,7 +48,7 @@ def main():
             q_id = gr.Textbox(label='Question No.', visible=False)
 
         qbox = gr.Textbox(label='Enter your question')
-        abox = gr.Textbox(label='Answer', interactive=False, autoscroll=False, max_lines=12)
+        abox = gr.Textbox(label='Answer', interactive=False, autoscroll=False)
 
         with gr.Row():
             submit_btn = gr.Button('Submit', size='sm')
