@@ -2,7 +2,7 @@ import os
 import torch
 from llama_index.llms.huggingface import HuggingFaceLLM
 from llama_index.core.prompts import PromptTemplate
-from transformers import pipeline  # , BitsAndBytesConfig
+from transformers import pipeline
 
 
 class SummarizerReader:
@@ -24,7 +24,6 @@ class LLMReader:
         self.prompt_tmpl = prompt_tmpl
 
         kwargs['model_kwargs'].update({'torch_dtype': torch.bfloat16})
-        # kwargs['model_kwargs']['quantization_config'] = BitsAndBytesConfig(load_in_8bit=True)
         self.llm = HuggingFaceLLM(
             model_name=llm_name,
             tokenizer_name=llm_name,
