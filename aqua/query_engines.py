@@ -30,6 +30,12 @@ class QueryEngine:
 
         return response
 
+    def query_asmt(self, query_str, asmtq_file):
+        with open(asmtq_file) as f:
+            asmtq = f.read()
+        answer_str = self.reader.answer(asmtq, query_str)
+        return f'{answer_str}'
+
     def __str__ (self):
         f'{type(self).__name__}(\n\tretriever={self.retriever},\n\treader={self.reader}\n)'
 

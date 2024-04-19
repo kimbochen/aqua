@@ -5,14 +5,23 @@ import gradio as gr
 import requests
 
 API_ENDPOINT = f"http://{os.environ['SERVER_IP']}:{os.environ['SERVER_PORT']}"
-USER_ID = sys.argv[1]
+USER_ID = sys.argv[1].split('/')[2]
 QA_ID = None
 
 
-def query_aqua(query):
+def query_aqua(qtype_val, query, asmt_id, q_id):
     global QA_ID, USER_ID
-    response = requests.get(API_ENDPOINT, params={'query': query, 'user_id': USER_ID}).json()
+
+    if qtype_val == 'General':
+        response = requests.get(API_ENDPOINT, params={'query': query, 'user_id': USER_ID}).json()
+    elif qtype_val == 'Assignment':
+        query_params = {'query': query, 'user_id': USER_ID, 'asmt_id': asmt_id, 'q_id': q_id}
+        response = requests.get(f'{API_ENDPOINT}/asmtq', params=query_params).json()
+    else:
+        raise ValueError(f'Invalid question type {qtype_val}')
+
     QA_ID = response['qa_id']
+
     return response['answer']
 
 
@@ -52,7 +61,7 @@ def main():
         # Question submission logic
         gr.on(
             triggers=[qbox.submit, submit_btn.click], fn=query_aqua,
-            inputs=qbox, outputs=abox
+            inputs=[qtype, qbox, asmt_id, q_id], outputs=abox
         )
 
         # Flag button logic
@@ -61,7 +70,7 @@ def main():
 
     aqua.launch(
         server_name='0.0.0.0',
-        root_path=f'{USER_ID}/aqua',
+        root_path=f'{sys.argv[1]}/aqua',
         server_port=int(sys.argv[2])
     )
 
