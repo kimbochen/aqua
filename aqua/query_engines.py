@@ -14,18 +14,16 @@ class QueryEngine:
 
     def query(self, query_str):
         rtvd_nodes = self.retriever.retrieve(query_str)
-        context_str = '\n\n'.join(node.get_content() for node in rtvd_nodes)
-
         if len(rtvd_nodes) == 0:
             return 'Sorry I cannot find relevant information to answer that.'
 
+        context_str = '\n\n'.join(node.get_content() for node in rtvd_nodes)
         answer_str = self.reader.answer(context_str, query_str)
 
         sources_str = '\n\n'.join(
             f'[{i}] {node.metadata["file_name"]} | Score={node.score:.4f}\n{node.text}'
             for i, node in enumerate(rtvd_nodes, start=1)
         )
-
         response = f'{answer_str}\n\nSources:\n{sources_str}'
 
         return response
