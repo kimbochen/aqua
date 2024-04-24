@@ -24,15 +24,14 @@ class QueryEngine:
             f'[{i}] {node.metadata["file_name"]} | Score={node.score:.4f}\n{node.text}'
             for i, node in enumerate(rtvd_nodes, start=1)
         )
-        response = f'{answer_str}\n\nSources:\n{sources_str}'
 
-        return response
+        return f'{answer_str}', sources_str
 
     def query_asmt(self, query_str, asmtq_file):
         with open(asmtq_file) as f:
             asmtq = f.read()
         answer_str = self.reader.answer(asmtq, query_str)
-        return f'{answer_str}'
+        return f'{answer_str}', asmtq
 
     def __str__ (self):
         f'{type(self).__name__}(\n\tretriever={self.retriever},\n\treader={self.reader}\n)'

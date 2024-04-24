@@ -14,29 +14,26 @@ app = FastAPI()
 logging.info('Fast API app loaded.')
 
 
-DEBUG = True
-if not DEBUG:
-    query_engine = aqua.StableLM3BQueryEngine('data/')
-    DB_PATH = 'user_logs.db'
-else:
-    query_engine = aqua.StableLM3BQueryEngine('data/')
-    DB_PATH = 'debug_user_logs.db'
+query_engine = aqua.StableLM3BQueryEngine('data/')
 logging.info('Query engine loaded.')
 
 
+DEBUG = True
+DB_PATH = 'debug_user_logs.db' if DEBUG else 'user_logs.db'
+
 if not Path(DB_PATH).exists():
     with (conn := sqlite3.connect(DB_PATH)):
-        conn.cursor().execute('CREATE TABLE user_logs(id, user_id, query, response, quality)')
+        conn.cursor().execute('CREATE TABLE user_logs(id, user_id, qtype, query, answer, sources, quality)')
     conn.close()
     logging.info(f'Database {DB_PATH} created.')
 
 
-def save_to_database(user_id, query, response):
+def save_to_database(user_id, qtype, query, answer, sources):
     qa_id = int(f'{dt.now():%Y%m%d%H%M%S}')
 
     with (conn := sqlite3.connect(DB_PATH)):
-        entry = (qa_id, user_id, query, response, False)
-        conn.cursor().execute('INSERT INTO user_logs VALUES(?, ?, ?, ?, ?)', entry)
+        entry = (qa_id, user_id, qtype, query, answer, sources, False)
+        conn.cursor().execute('INSERT INTO user_logs VALUES(?, ?, ?, ?, ?, ?, ?)', entry)
 
     conn.close()
 
@@ -45,8 +42,9 @@ def save_to_database(user_id, query, response):
 
 @app.get('/')
 def respond(query: str, user_id: str):
-    response = query_engine.query(query)
-    qa_id = save_to_database(user_id, query, response)
+    answer, sources = query_engine.query(query)
+    qa_id = save_to_database(user_id, 'general', query, answer, sources)
+    response = f'{answer}\n\nSources:\n{sources}'
     return {'answer': response, 'qa_id': qa_id}
 
 
@@ -63,8 +61,9 @@ def respond_asmtq(query: str, user_id: str, asmt_id: int, q_id: int):
     asmtq_file = f'data/asmts_test/asmt{asmt_id}-q{q_id}.txt'
 
     if Path(asmtq_file).exists():
-        response = query_engine.query_asmt(query, asmtq_file)
-        qa_id = save_to_database(user_id, query, response)
+        answer, asmtq = query_engine.query_asmt(query, asmtq_file)
+        qa_id = save_to_database(user_id, 'asmtq', query, answer, asmtq)
+        response = f'{answer}\n\nAssignment Question:\n{asmtq}'
     else:
         print(f'Invalid path {asmtq_file} ')
         response = 'Invalid assignment question.'
