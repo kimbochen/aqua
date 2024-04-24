@@ -43,7 +43,7 @@ def main():
 
     with gr.Blocks(theme=theme) as aqua:
         with gr.Row():
-            qtype = gr.Dropdown(['General', 'Assignment'], label='Question Type')
+            qtype = gr.Dropdown(['General', 'Assignment'], value='General', label='Question Type')
             asmt_id = gr.Textbox(label='Assignment No.', visible=False)
             q_id = gr.Textbox(label='Question No.', visible=False)
 
