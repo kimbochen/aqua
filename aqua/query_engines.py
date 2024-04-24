@@ -14,11 +14,10 @@ class QueryEngine:
 
     def query(self, query_str):
         rtvd_nodes = self.retriever.retrieve(query_str)
-        context_str = '\n\n'.join(node.get_content() for node in rtvd_nodes)
-
         if len(rtvd_nodes) == 0:
             return 'Sorry I cannot find relevant information to answer that.'
 
+        context_str = '\n\n'.join(node.get_content() for node in rtvd_nodes)
         answer_str = self.reader.answer(context_str, query_str)
 
         sources_str = '\n\n'.join(
@@ -26,9 +25,13 @@ class QueryEngine:
             for i, node in enumerate(rtvd_nodes, start=1)
         )
 
-        response = f'{answer_str}\n\nSources:\n{sources_str}'
+        return f'{answer_str}', sources_str
 
-        return response
+    def query_asmt(self, query_str, asmtq_file):
+        with open(asmtq_file) as f:
+            asmtq = f.read()
+        answer_str = self.reader.answer(asmtq, query_str)
+        return f'{answer_str}', asmtq
 
     def __str__ (self):
         f'{type(self).__name__}(\n\tretriever={self.retriever},\n\treader={self.reader}\n)'

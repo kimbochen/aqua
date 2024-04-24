@@ -42,14 +42,14 @@ RUN python -m pip install setuptools wheel && \
 
 WORKDIR /
 COPY aqua-jupyter-proxy/ /tmp/aqua-jupyter-proxy/
-COPY launch_frontend.py /tmp/launch_frontend.py
 RUN python -m pip install /tmp/aqua-jupyter-proxy/ && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"
+COPY launch_frontend.py /tmp/launch_frontend.py
 
 
-# ENV SERVER_IP=
-# ENV SERVER_PORT=
+ENV SERVER_IP=""
+ENV SERVER_PORT=""
 
 WORKDIR /
 RUN    ln -fs /home /datahub && \
