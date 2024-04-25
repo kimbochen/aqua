@@ -28,8 +28,9 @@ RUN rm /tmp/cuda_12.2.0_535.54.03_linux.run
 
 
 RUN python -m pip install --no-cache-dir \
-    'jupyter-server-proxy' \
-    'jupyter-vscode-proxy' && \
+    'jupyter-server-proxy' 'jupyter-vscode-proxy' \
+    'pyyaml' 'grequests' 'mdtex2html' 'markdown' 'nbformat' \
+    'jupyterlab-drawio' 'jupyterlab-spreadsheet-editor' 'jupyterlab-code-formatter' 'jupyterlab_image_editor' && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"
 
