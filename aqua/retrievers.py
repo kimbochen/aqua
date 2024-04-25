@@ -1,6 +1,9 @@
-from llama_index.core import ServiceContext, VectorStoreIndex
+from pathlib import Path
+from llama_index.core import ServiceContext, StorageContext, VectorStoreIndex
 from llama_index.core.retrievers import BaseRetriever
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+PERSIST_DIR = Path('.index_cache/')
 
 
 class EnsembleRetriever(BaseRetriever):
@@ -30,7 +33,16 @@ class EnsembleRetriever(BaseRetriever):
         embd_ctx = ServiceContext.from_defaults(
             llm=None, embed_model=embd_model, chunk_size=256, chunk_overlap=128
         )
-        idx = VectorStoreIndex.from_documents(corpus, service_context=embd_ctx)
+        embd_persist_dir = PERSIST_DIR / embd_model_name
+        if embd_persist_dir.exists():
+            print(f'Found persist directory {embd_persist_dir}. Loading from directory.')
+            stg_ctx = StorageContext.from_defaults(persist_dir=embd_persist_dir)
+            idx = VectorStoreIndex.from_documents(corpus, service_context=embd_ctx, storage_context=stg_ctx)
+        else:
+            print(f'No persist directory found. Creating index and saving to {embd_persist_dir}.')
+            idx = VectorStoreIndex.from_documents(corpus, service_context=embd_ctx)
+            idx.storage_context.persist(persist_dir=embd_persist_dir)
+
         return idx
 
     def __str__(self):

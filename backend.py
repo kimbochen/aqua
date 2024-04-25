@@ -14,7 +14,7 @@ app = FastAPI()
 logging.info('Fast API app loaded.')
 
 
-query_engine = aqua.StableLM3BQueryEngine('data/')
+query_engine = aqua.StableLM3BQueryEngine('data/indexed')
 logging.info('Query engine loaded.')
 
 
