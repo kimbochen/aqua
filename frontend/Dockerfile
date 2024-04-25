@@ -29,23 +29,22 @@ RUN rm /tmp/cuda_12.2.0_535.54.03_linux.run
 
 RUN python -m pip install --no-cache-dir \
     'jupyter-server-proxy' 'jupyter-vscode-proxy' \
-    'pyyaml' 'grequests' 'mdtex2html' 'markdown' \
-    'jupyterlab-drawio' 'jupyterlab-spreadsheet-editor' 'jupyterlab-code-formatter' 'jupyterlab_image_editor' && \
-    fix-permissions "${CONDA_DIR}" && \
-    fix-permissions "/home/${NB_USER}"
+    # 'jupyterlab-drawio' 'jupyterlab-spreadsheet-editor' 'jupyterlab-code-formatter' 'jupyterlab_image_editor' \
+    'pyyaml' 'grequests' 'mdtex2html' 'markdown' && \
+    fix-permissions "${CONDA_DIR}" && fix-permissions "/home/${NB_USER}"
 
 WORKDIR /
 COPY assets/cfiddle /tmp/cfiddle
 RUN python -m pip install setuptools wheel && \
     python -m pip install /tmp/cfiddle/cfiddle && \
     python -m pip install /tmp/cfiddle/delegate-function && \
-    python -m pip install /tmp/cfiddle/hungwei-class 
+    python -m pip install /tmp/cfiddle/hungwei-class && \
+    fix-permissions "${CONDA_DIR}" && fix-permissions "/home/${NB_USER}"
 
 WORKDIR /
 COPY aqua-jupyter-proxy/ /tmp/aqua-jupyter-proxy/
 RUN python -m pip install /tmp/aqua-jupyter-proxy/ && \
-    fix-permissions "${CONDA_DIR}" && \
-    fix-permissions "/home/${NB_USER}"
+    fix-permissions "${CONDA_DIR}" && fix-permissions "/home/${NB_USER}"
 COPY launch_frontend.py /tmp/launch_frontend.py
 
 
