@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 import gradio as gr
 import requests
@@ -8,14 +9,24 @@ API_ENDPOINT = f"http://{os.environ['SERVER_IP']}:{os.environ['SERVER_PORT']}"
 USER_ID = sys.argv[1].split('/')[2]
 QA_ID = None
 
+ASMTQ_IDS = [
+    (1, 5), (1, 7), (1, 8), (1, 9), (1, 10),
+    (3, 1), (3, 2), (3, 3), (3, 7), (3, 9), (3, 10), (3, 11), (3, 12), (3, 15), (3, 16)
+]
+MENU_TO_FNAME = {
+    f'Assignment {asmt_id} Question {q_id}': f'asmt{asmt_id}-q{q_id}'
+    for asmt_id, q_id in ASMTQ_IDS
+}
+MENU_TO_FNAME['Assignment 3 Programming Question'] = 'asmt3-qprog'
 
-def query_aqua(qtype_val, query, asmt_id, q_id):
+
+def query_aqua(qtype_val, query, asmtq_menu_val):
     global QA_ID, USER_ID
 
     if qtype_val == 'General':
         response = requests.get(API_ENDPOINT, params={'query': query, 'user_id': USER_ID}).json()
     elif qtype_val == 'Assignment':
-        query_params = {'query': query, 'user_id': USER_ID, 'asmt_id': asmt_id, 'q_id': q_id}
+        query_params = {'query': query, 'user_id': USER_ID, 'asmtq_fname': MENU_TO_FNAME[asmtq_menu_val]}
         response = requests.get(f'{API_ENDPOINT}/asmtq', params=query_params).json()
     else:
         response = {'answer': f'Please select a question type.', 'qa_id': None}
@@ -32,10 +43,7 @@ def flag_response(q_str, a_str):
 
 def select_index(qtype_val):
     show_textbox = (qtype_val == 'Assignment')
-    return (
-        gr.update(visible=show_textbox, interactive=show_textbox),
-        gr.update(visible=show_textbox, interactive=show_textbox)
-    )
+    return gr.update(visible=show_textbox, interactive=show_textbox)
 
 
 def main():
@@ -44,8 +52,7 @@ def main():
     with gr.Blocks(theme=theme) as aqua:
         with gr.Row():
             qtype = gr.Dropdown(['General', 'Assignment'], value='General', label='Question Type')
-            asmt_id = gr.Textbox(label='Assignment No.', visible=False)
-            q_id = gr.Textbox(label='Question No.', visible=False)
+            asmtq_menu = gr.Dropdown(list(MENU_TO_FNAME.keys()), label='Select a question.', visible=False)
 
         qbox = gr.Textbox(label='Enter your question')
         abox = gr.Textbox(label='Answer', interactive=False, autoscroll=False)
@@ -56,12 +63,12 @@ def main():
             flag_btn = gr.Button('Good Response', size='sm', interactive=False)
 
         # Question type logic
-        qtype.input(select_index, inputs=[qtype], outputs=[asmt_id, q_id])
+        qtype.input(select_index, inputs=[qtype], outputs=[asmtq_menu])
 
         # Question submission logic
         gr.on(
             triggers=[qbox.submit, submit_btn.click], fn=query_aqua,
-            inputs=[qtype, qbox, asmt_id, q_id], outputs=abox
+            inputs=[qtype, qbox, asmtq_menu], outputs=abox
         )
 
         # Flag button logic

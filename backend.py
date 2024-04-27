@@ -57,16 +57,12 @@ def save_feedback(qa_id: int, user_id: str):
 
 
 @app.get('/asmtq')
-def respond_asmtq(query: str, user_id: str, asmt_id: int, q_id: int):
-    asmtq_file = f'data/asmts_test/asmt{asmt_id}-q{q_id}.txt'
+def respond_asmtq(query: str, user_id: str, asmtq_fname: str):
+    asmtq_file = f'data/asmts/{asmtq_fname}.txt'
+    assert Path(asmtq_file).exists(), f'Invalid path {asmtq_file} '
 
-    if Path(asmtq_file).exists():
-        answer, asmtq = query_engine.query_asmt(query, asmtq_file)
-        qa_id = save_to_database(user_id, 'asmtq', query, answer, asmtq)
-        response = f'{answer}\n\nAssignment Question:\n{asmtq}'
-    else:
-        print(f'Invalid path {asmtq_file} ')
-        response = 'Invalid assignment question.'
-        qa_id = None
+    answer, asmtq = query_engine.query_asmt(query, asmtq_file)
+    qa_id = save_to_database(user_id, 'asmtq', query, answer, asmtq)
+    response = f'{answer}\n\nSource:\n{asmtq}'
 
     return {'answer': response, 'qa_id': qa_id}
