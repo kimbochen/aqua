@@ -15,7 +15,7 @@ class QueryEngine:
     def query(self, query_str):
         rtvd_nodes = self.retriever.retrieve(query_str)
         if len(rtvd_nodes) == 0:
-            return 'Sorry I cannot find relevant information to answer that.'
+            return 'Sorry I cannot find relevant information to answer that.', ''
 
         context_str = '\n\n'.join(node.get_content() for node in rtvd_nodes)
         answer_str = self.reader.answer(context_str, query_str)
