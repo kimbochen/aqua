@@ -11,13 +11,15 @@ QA_ID = None
 
 ASMTQ_IDS = [
     (1, 5), (1, 7), (1, 8), (1, 9), (1, 10),
+    (2, 1), (2, 11), (2, 14),
     (3, 1), (3, 2), (3, 3), (3, 7), (3, 9), (3, 10), (3, 11), (3, 12), (3, 15), (3, 16)
 ]
 MENU_TO_FNAME = {
     f'Assignment {asmt_id} Question {q_id}': f'asmt{asmt_id}-q{q_id}'
     for asmt_id, q_id in ASMTQ_IDS
 }
-MENU_TO_FNAME['Assignment 3 Programming Question'] = 'asmt3-qprog'
+MENU_TO_FNAME['Assignment 2 Programming'] = 'asmt2-qprog'
+MENU_TO_FNAME['Assignment 3 Programming'] = 'asmt3-qprog'
 
 
 def query_aqua(qtype_val, query, asmtq_menu_val):
