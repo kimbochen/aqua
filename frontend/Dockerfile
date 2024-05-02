@@ -7,7 +7,7 @@ USER root
 RUN apt-get update && \
     apt-get install -y host iputils-ping tzdata googletest systemd htpdate && \
     apt-get install -y nlohmann-json3-dev libboost-all-dev libgtest-dev && \
-    # apt-get install -y pandoc texlive texlive-latex-extra texlive-xetex && \
+    apt-get install -y pandoc texlive texlive-latex-extra texlive-xetex && \
     apt-get install -y make cmake vim curl unzip zip git
 
 RUN apt-get update --fix-missing --allow-releaseinfo-change && \
@@ -27,10 +27,14 @@ RUN sh /tmp/cuda_12.2.0_535.54.03_linux.run --silent --toolkit
 RUN rm /tmp/cuda_12.2.0_535.54.03_linux.run
 
 
+ENV PYTHONPATH="/opt/conda/lib/python3.8/site-packages"
+
+RUN python -m pip install --upgrade pip
 RUN python -m pip install --no-cache-dir \
     'jupyter-server-proxy' 'jupyter-vscode-proxy' \
-    # 'jupyterlab-drawio' 'jupyterlab-spreadsheet-editor' 'jupyterlab-code-formatter' 'jupyterlab_image_editor' \
-    'pyyaml' 'grequests' 'mdtex2html' 'markdown' && \
+    'pyyaml' 'grequests' 'mdtex2html' 'markdown' \
+    'jupyterhub' 'jupyterlab' \
+    'jupyterlab-drawio' 'jupyterlab-spreadsheet-editor' 'jupyterlab-code-formatter' 'jupyterlab_image_editor' && \
     fix-permissions "${CONDA_DIR}" && fix-permissions "/home/${NB_USER}"
 
 WORKDIR /
