@@ -1,6 +1,6 @@
 ARG platform
 ARG python_use
-FROM jupyter/scipy-notebook:67b8fb91f950
+FROM jupyter/scipy-notebook:2022-02-17
 USER root
 
 
@@ -27,7 +27,7 @@ RUN sh /tmp/cuda_12.2.0_535.54.03_linux.run --silent --toolkit
 RUN rm /tmp/cuda_12.2.0_535.54.03_linux.run
 
 
-ENV PYTHONPATH="/opt/conda/lib/python3.8/site-packages"
+ENV PYTHONPATH="/opt/conda/lib/python3.9/site-packages"
 
 RUN python -m pip install --upgrade pip
 RUN python -m pip install --no-cache-dir \
