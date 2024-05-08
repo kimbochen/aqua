@@ -18,7 +18,7 @@ query_engine = aqua.StableLM3BQueryEngine('data/indexed')
 logging.info('Query engine loaded.')
 
 
-DEBUG = True
+DEBUG = False
 DB_PATH = 'debug_user_logs.db' if DEBUG else 'user_logs.db'
 
 if not Path(DB_PATH).exists():
@@ -30,13 +30,10 @@ if not Path(DB_PATH).exists():
 
 def save_to_database(user_id, qtype, query, answer, sources):
     qa_id = int(f'{dt.now():%Y%m%d%H%M%S}')
-
     with (conn := sqlite3.connect(DB_PATH)):
         entry = (qa_id, user_id, qtype, query, answer, sources, False)
         conn.cursor().execute('INSERT INTO user_logs VALUES(?, ?, ?, ?, ?, ?, ?)', entry)
-
     conn.close()
-
     return qa_id
 
 
