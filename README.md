@@ -34,6 +34,12 @@ python prep_data_src.py -c --file-path <DOCUMENT SOURCE FILE> --url <WEBSITE URL
 Only use this command for updating existing website document sources.
 
 
+### Example: UCR CS 203
+
+Aqua has been deployed for class CS 203 at UCR.  
+[Here](https://drive.google.com/file/d/15ykVwt3ph3MtFFyXCMEJ_DbShF7Yzazw/view) is the processed data for the class.
+
+
 ## Launching Backend
 
 To launch the backend, use the following command:
