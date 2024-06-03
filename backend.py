@@ -1,65 +1,58 @@
 import logging
-import random
 import sqlite3
-from datetime import datetime as dt
 from pathlib import Path
+from datetime import datetime as dt
 
 from fastapi import FastAPI
-import aqua
+
+from aqua import init_aqua
+
 
 logging.basicConfig(level=logging.INFO)
-
+DB_PATH = 'new_user_logs.db'
 
 app = FastAPI()
+query_aqua = init_aqua()
 logging.info('Fast API app loaded.')
 
 
-query_engine = aqua.StableLM3BQueryEngine('data/indexed')
-logging.info('Query engine loaded.')
-
-
-DEBUG = False
-DB_PATH = 'debug_user_logs.db' if DEBUG else 'user_logs.db'
-
-if not Path(DB_PATH).exists():
+def run_sql_query(*sql_query):
     with (conn := sqlite3.connect(DB_PATH)):
-        conn.cursor().execute('CREATE TABLE user_logs(id, user_id, qtype, query, answer, sources, quality)')
+        conn.cursor().execute(*sql_query)
     conn.close()
-    logging.info(f'Database {DB_PATH} created.')
 
 
-def save_to_database(user_id, qtype, query, answer, sources):
+def log_record(user_id, qtype, query, answer, sources):
     qa_id = int(f'{dt.now():%Y%m%d%H%M%S}')
-    with (conn := sqlite3.connect(DB_PATH)):
-        entry = (qa_id, user_id, qtype, query, answer, sources, False)
-        conn.cursor().execute('INSERT INTO user_logs VALUES(?, ?, ?, ?, ?, ?, ?)', entry)
-    conn.close()
+    entry = (qa_id, user_id, qtype, query, answer, sources, 0)
+    run_sql_query('INSERT INTO user_logs VALUES(?, ?, ?, ?, ?, ?, ?)', entry)
     return qa_id
 
 
-@app.get('/')
-def respond(query: str, user_id: str):
-    answer, sources = query_engine.query(query)
-    qa_id = save_to_database(user_id, 'general', query, answer, sources)
-    response = f'{answer}\n\nSources:\n{sources}'
-    return {'answer': response, 'qa_id': qa_id}
+if not Path(DB_PATH).exists():
+    run_sql_query('CREATE TABLE user_logs (qa_id, user_id, qtype, query, answer, sources, quality)')
+    logging.info(f'Database {DB_PATH} created.')
+
+
+@app.get('/query')
+def query_fn(query: str, user_id: str, qtype: str):
+    answer, sources = query_aqua(query, qtype)
+    qa_id = log_record(query=query, user_id=user_id, qtype=qtype, answer=answer, sources=sources)
+    return {
+        'answer': answer,
+        'sources': sources,
+        'qa_id': qa_id
+    }
 
 
 @app.post('/feedback')
-def save_feedback(qa_id: int, user_id: str):
-    with (conn := sqlite3.connect(DB_PATH)):
-        sql_query = 'UPDATE user_logs SET quality = 1 WHERE id = ? AND user_id = ?'
-        conn.cursor().execute(sql_query, (qa_id, user_id))
-    conn.close()
+def feedback(qa_id: int, user_id: str, verdict: int):
+    sql_query = f'UPDATE user_logs SET quality = {verdict} WHERE qa_id = ? AND user_id = ?'
+    run_sql_query(sql_query, (qa_id, user_id))
 
 
-@app.get('/asmtq')
-def respond_asmtq(query: str, user_id: str, asmtq_fname: str):
-    asmtq_file = f'data/asmts/{asmtq_fname}.txt'
-    assert Path(asmtq_file).exists(), f'Invalid path {asmtq_file} '
-
-    answer, asmtq = query_engine.query_asmt(query, asmtq_file)
-    qa_id = save_to_database(user_id, 'asmtq', query, answer, asmtq)
-    response = f'{answer}\n\nSource:\n{asmtq}'
-
-    return {'answer': response, 'qa_id': qa_id}
+@app.get('/')
+def legacy_query_fn(query: str, user_id: str):
+    response = query_fn(query, user_id, 'general')
+    ans_src = response['answer'] + '\n\nSources:\n\n' + response['sources']
+    return {'answer': ans_src, 'qa_id': response['qa_id']}

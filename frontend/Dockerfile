@@ -49,7 +49,7 @@ WORKDIR /
 COPY aqua-jupyter-proxy/ /tmp/aqua-jupyter-proxy/
 RUN python -m pip install /tmp/aqua-jupyter-proxy/ && \
     fix-permissions "${CONDA_DIR}" && fix-permissions "/home/${NB_USER}"
-COPY launch_frontend.py /tmp/launch_frontend.py
+COPY frontend.py /tmp/frontend.py
 
 
 ENV SERVER_IP=""
