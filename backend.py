@@ -1,18 +1,26 @@
 import logging
+import os
 import sqlite3
+from dataclasses import asdict
 from pathlib import Path
 from datetime import datetime as dt
 
+import yaml
 from fastapi import FastAPI
 
-from aqua import init_aqua
+from aqua import config_aqua
 
 
 logging.basicConfig(level=logging.INFO)
-DB_PATH = 'new_user_logs.db'
+
+with open(os.environ['CONFIG_FILE']) as f:
+    aqua_cfg = yaml.safe_load(f)
+query_aqua = config_aqua(aqua_cfg['data_srcs']['save_path'], **aqua_cfg['aqua_cfg'])
+logging.info('Aqua loaded.')
+
+DB_PATH = aqua_cfg['db_path']
 
 app = FastAPI()
-query_aqua = init_aqua()
 logging.info('Fast API app loaded.')
 
 

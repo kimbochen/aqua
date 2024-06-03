@@ -1,7 +1,7 @@
 import json
 import os
 import logging
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
 from time import perf_counter_ns
 
@@ -21,22 +21,11 @@ tf_logging.set_verbosity_error()
 logging.basicConfig(level=logging.INFO)
 
 
-@dataclass
-class AquaConfig:
-    model_name: str = 'BAAI/bge-base-en-v1.5'
-    reader_name: str = 'stabilityai/stablelm-zephyr-3b'
-    chunk_size: int = 128
-    overlap_ratio: float = 0.5
-    top_k: int = 15
-    max_dist: float = 0.75
-
-aqua_cfg = AquaConfig()
-
-
 # Embedding Model
-logging.info(f'Loading embedding model {aqua_cfg.model_name} ...')
-tokenizer = AutoTokenizer.from_pretrained(aqua_cfg.model_name)
-model = AutoModel.from_pretrained(aqua_cfg.model_name).to('cuda')
+MODEL_NAME = 'BAAI/bge-base-en-v1.5'
+logging.info(f'Loading embedding model {MODEL_NAME} ...')
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModel.from_pretrained(MODEL_NAME).to('cuda')
 
 @torch.no_grad()
 def vector_embed(text):
@@ -47,10 +36,11 @@ def vector_embed(text):
 
 
 # Reader Model
-logging.info(f'Loading reader model {aqua_cfg.reader_name} ...')
-tokenizer_r = AutoTokenizer.from_pretrained(aqua_cfg.reader_name)
+READER_NAME = 'stabilityai/stablelm-zephyr-3b'
+logging.info(f'Loading reader model {READER_NAME} ...')
+tokenizer_r = AutoTokenizer.from_pretrained(READER_NAME)
 reader = AutoModelForCausalLM.from_pretrained(
-    aqua_cfg.reader_name, torch_dtype=torch.float16, trust_remote_code=True
+    READER_NAME, torch_dtype=torch.float16, trust_remote_code=True
 ).to('cuda')
 instr_tmpl = '''\
 Context information is below.
@@ -71,11 +61,11 @@ def llm_complete(context, query):
 
 
 # Configure Aqua API
-def config_aqua(chunk_size, overlap_ratio, top_k, max_dist, **kwargs):
+def config_aqua(save_path, chunk_size, overlap_ratio, top_k, max_dist, **kwargs):
     # Creating documents
     docs = []
     parser = SentenceSplitter(chunk_size=chunk_size, chunk_overlap=int(chunk_size*overlap_ratio))
-    with open('deploy_data/doc_src_paths.json') as f:
+    with open(f'{save_path}/doc_src_paths.json') as f:
         doc_src_paths = list(map(Path, json.load(f)))
     logging.info(f'Creating documents from {len(doc_src_paths)} document sources ...')
     
@@ -89,6 +79,7 @@ def config_aqua(chunk_size, overlap_ratio, top_k, max_dist, **kwargs):
 
     # Creating vector index
     n_trees = len(docs)
+    Path('.deploy_ann/').mkdir(exist_ok=True)
     filename = f'.deploy_ann/idx_bge_{chunk_size}_{int(chunk_size*overlap_ratio)}_{n_trees}.ann'
     vector_idx = AnnoyIndex(768, 'euclidean')  # Hidden dim of BERT = 768
     logging.info(f'Loading vector index {filename} ...')
@@ -136,9 +127,4 @@ def config_aqua(chunk_size, overlap_ratio, top_k, max_dist, **kwargs):
                 sources = ''
         return answer, sources
 
-    return query_fn
-
-
-def init_aqua():
-    query_fn = config_aqua(**asdict(aqua_cfg))
     return query_fn
